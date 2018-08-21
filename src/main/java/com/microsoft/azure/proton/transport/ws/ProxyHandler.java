@@ -7,5 +7,9 @@ package com.microsoft.azure.proton.transport.ws;
 import java.nio.ByteBuffer;
 
 public interface ProxyHandler {
+
+    String createProxyRequest(String hostName);
+
     Boolean validateProxyReply(ByteBuffer buffer);
+
 }

@@ -108,7 +108,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
             this.webSocketHandler = new WebSocketHandlerImpl();
         }
 
-        isWebSocketEnabled = true;
+        this.isWebSocketEnabled = true;
     }
 
     @Override
@@ -216,7 +216,9 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
     }
 
     protected void writeProxyRequest() {
-        // todo
+        outputBuffer.clear();
+        String request = proxyHandler.createProxyRequest(host);
+        outputBuffer.put(request.getBytes());
     }
 
     protected void writeUpgradeRequest() {
@@ -503,6 +505,13 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                             }
 
                             head.limit(outputBuffer.position());
+
+                            if (headClosed) {
+                                webSocketState = WebSocketState.PN_WS_FAILED;
+                                return Transport.END_OF_STREAM;
+                            } else {
+                                return outputBuffer.position();
+                            }
                         } else {
                             return outputBuffer.position();
                         }
