@@ -10,6 +10,7 @@ import static com.microsoft.azure.proton.transport.ws.WebSocketHandler.WebSocket
 import static org.apache.qpid.proton.engine.impl.ByteBufferUtils.newWriteableBuffer;
 import static org.apache.qpid.proton.engine.impl.ByteBufferUtils.pourAll;
 
+import com.microsoft.azure.proton.transport.ws.ProxyHandler;
 import com.microsoft.azure.proton.transport.ws.WebSocket;
 import com.microsoft.azure.proton.transport.ws.WebSocketHandler;
 import com.microsoft.azure.proton.transport.ws.WebSocketHeader;
@@ -41,6 +42,8 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
 
     private WebSocketHandler webSocketHandler;
     private WebSocketState webSocketState = WebSocketState.PN_WS_NOT_STARTED;
+
+    private ProxyHandler proxyHandler;
 
     private String host = "";
     private String path = "";
@@ -94,6 +97,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
             WebSocketHandler webSocketHandler) {
         this.host = host;
         this.path = path;
+        this.query = query;
         this.port = port;
         this.protocol = protocol;
         this.additionalHeaders = additionalHeaders;
@@ -105,6 +109,28 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         }
 
         isWebSocketEnabled = true;
+    }
+
+    @Override
+    public void configure(
+            String host,
+            String path,
+            String query,
+            int port,
+            String protocol,
+            Map<String, String> additionalHeaders,
+            WebSocketHandler webSocketHandler,
+            ProxyHandler proxyHandler) {
+        this.configure(
+                host,
+                path,
+                query,
+                port,
+                protocol,
+                additionalHeaders,
+                webSocketHandler);
+
+        this.proxyHandler = proxyHandler;
     }
 
     @Override
@@ -187,6 +213,10 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         builder.append("]");
 
         return builder.toString();
+    }
+
+    protected void writeProxyRequest() {
+        // todo
     }
 
     protected void writeUpgradeRequest() {
@@ -274,7 +304,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         private void processInput() throws TransportException {
             switch (webSocketState) {
                 case PN_PROXY_CONNECTING:
-                    if (webSocketHandler.validateProxyReply(inputBuffer)) {
+                    if (proxyHandler.validateProxyReply(inputBuffer)) {
                         webSocketState = webSocketState.PN_PROXY_CONNECTED;
                     }
                     inputBuffer.compact();
@@ -464,9 +494,13 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                 switch (webSocketState) {
                     case PN_PROXY_NOT_STARTED:
                         if (outputBuffer.position() == 0) {
-                            webSocketState = WebSocketState.PN_PROXY_CONNECTING;
+                            if (proxyHandler == null) {
+                                webSocketState = WebSocketState.PN_WS_NOT_STARTED;
+                            } else {
+                                webSocketState = WebSocketState.PN_PROXY_CONNECTING;
 
-                            writeProxyConnectRequest();
+                                writeProxyRequest();
+                            }
 
                             head.limit(outputBuffer.position());
                         } else {

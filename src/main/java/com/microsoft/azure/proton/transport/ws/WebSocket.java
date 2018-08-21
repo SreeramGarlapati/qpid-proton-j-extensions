@@ -14,19 +14,21 @@ import java.util.Map;
 public interface WebSocket {
     public enum WebSocketState {
         /**
-         * Proxy Negotiation.
+         * Proxy negotiation.
          */
         PN_PROXY_NOT_STARTED,
+        /**
+         * Websockets.
+         */
+        PN_WS_NOT_STARTED,
+        /**
+         * Proxy CONNECT frame.
+         */
         PN_PROXY_CONNECTING,
         /**
          * Connected to Proxy.
          */
         PN_PROXY_CONNECTED,
-        PN_PROXY_FAILED,
-        /**
-         * WebSocket.
-         */
-        PN_WS_NOT_STARTED,
         /**
          * Pending connection.
          */
@@ -99,6 +101,28 @@ public interface WebSocket {
             String protocol,
             Map<String, String> additionalHeaders,
             WebSocketHandler webSocketHandler);
+
+    /**
+     * Configure WebSocket connection.
+     *
+     * @param host              the hots name
+     * @param path              the resource path
+     * @param query             the query
+     * @param port              the port
+     * @param protocol          the base protocol
+     * @param additionalHeaders the Map of additional headers
+     * @param webSocketHandler  the web socket handler
+     * @param proxyHandler      the proxy handler
+     */
+    void configure(
+            String host,
+            String path,
+            String query,
+            int port,
+            String protocol,
+            Map<String, String> additionalHeaders,
+            WebSocketHandler webSocketHandler,
+            ProxyHandler proxyHandler);
 
     /**
      * Add WebSocket frame to send the given buffer.
