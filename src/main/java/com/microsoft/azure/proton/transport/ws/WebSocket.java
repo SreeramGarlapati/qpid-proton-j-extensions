@@ -14,6 +14,16 @@ import java.util.Map;
 public interface WebSocket {
     public enum WebSocketState {
         /**
+         * Proxy Negotiation.
+         */
+        PN_PROXY_NOT_STARTED,
+        PN_PROXY_CONNECTING,
+        /**
+         * Connected to Proxy.
+         */
+        PN_PROXY_CONNECTED,
+        PN_PROXY_FAILED,
+        /**
          * WebSocket.
          */
         PN_WS_NOT_STARTED,

@@ -273,6 +273,12 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
 
         private void processInput() throws TransportException {
             switch (webSocketState) {
+                case PN_PROXY_CONNECTING:
+                    if (webSocketHandler.validateProxyReply(inputBuffer)) {
+                        webSocketState = webSocketState.PN_PROXY_CONNECTED;
+                    }
+                    inputBuffer.compact();
+                    break;
                 case PN_WS_CONNECTING:
                     if (webSocketHandler.validateUpgradeReply(inputBuffer)) {
                         webSocketState = WebSocketState.PN_WS_CONNECTED_FLOW;
@@ -375,6 +381,8 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                     }
                     inputBuffer.compact();
                     break;
+                case PN_PROXY_NOT_STARTED:
+                case PN_PROXY_CONNECTED:
                 case PN_WS_NOT_STARTED:
                 case PN_WS_CLOSED:
                 case PN_WS_FAILED:
@@ -424,6 +432,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                 inputBuffer.flip();
 
                 switch (webSocketState) {
+                    case PN_PROXY_CONNECTING:
                     case PN_WS_CONNECTING:
                     case PN_WS_CONNECTED_FLOW:
                         processInput();
@@ -453,6 +462,16 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         public int pending() {
             if (isWebSocketEnabled) {
                 switch (webSocketState) {
+                    case PN_PROXY_NOT_STARTED:
+                        if (outputBuffer.position() == 0) {
+                            webSocketState = WebSocketState.PN_PROXY_CONNECTING;
+
+                            writeProxyConnectRequest();
+
+                            head.limit(outputBuffer.position());
+                        } else {
+                            return outputBuffer.position();
+                        }
                     case PN_WS_NOT_STARTED:
                         if (outputBuffer.position() == 0) {
                             webSocketState = WebSocketState.PN_WS_CONNECTING;
