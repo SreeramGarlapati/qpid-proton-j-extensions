@@ -15,11 +15,14 @@ public class ProxyHandlerImpl implements ProxyHandler {
 
     @Override
     public String createProxyRequest(String hostName) {
-        return null;
+        String connectRequest = "CONNECT %s HTTP/1.1\r\nHost: %s\r\nConnection: Keep-Alive\r\n";
+        connectRequest = String.format(connectRequest, hostName, hostName);
+        connectRequest = connectRequest.concat("\r\n");
+        return connectRequest;
     }
 
     @Override
     public Boolean validateProxyReply(ByteBuffer buffer) {
-        return null;
+        return true;
     }
 }

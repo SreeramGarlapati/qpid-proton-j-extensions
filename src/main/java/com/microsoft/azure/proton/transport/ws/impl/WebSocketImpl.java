@@ -41,7 +41,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
     private int webSocketHeaderSize = 0;
 
     private WebSocketHandler webSocketHandler;
-    private WebSocketState webSocketState = WebSocketState.PN_WS_NOT_STARTED;
+    private WebSocketState webSocketState = WebSocketState.PN_PROXY_NOT_STARTED;
 
     private ProxyHandler proxyHandler;
 
@@ -515,6 +515,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                         } else {
                             return outputBuffer.position();
                         }
+                    case PN_PROXY_CONNECTED:
                     case PN_WS_NOT_STARTED:
                         if (outputBuffer.position() == 0) {
                             webSocketState = WebSocketState.PN_WS_CONNECTING;
@@ -532,6 +533,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                         } else {
                             return outputBuffer.position();
                         }
+                    case PN_PROXY_CONNECTING:
                     case PN_WS_CONNECTING:
 
                         if (headClosed && (outputBuffer.position() == 0)) {
@@ -588,6 +590,8 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         public ByteBuffer head() {
             if (isWebSocketEnabled) {
                 switch (webSocketState) {
+                    case PN_PROXY_CONNECTING:
+                    case PN_PROXY_CONNECTED:
                     case PN_WS_CONNECTING:
                     case PN_WS_CONNECTED_PONG:
                     case PN_WS_CONNECTED_CLOSING:
@@ -604,6 +608,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                         }
 
                         return head;
+                    case PN_PROXY_NOT_STARTED:
                     case PN_WS_NOT_STARTED:
                     case PN_WS_CLOSED:
                     case PN_WS_FAILED:
@@ -620,6 +625,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
         public void pop(int bytes) {
             if (isWebSocketEnabled) {
                 switch (webSocketState) {
+                    case PN_PROXY_CONNECTING:
                     case PN_WS_CONNECTING:
                         if (outputBuffer.position() != 0) {
                             outputBuffer.flip();
@@ -631,6 +637,7 @@ public class WebSocketImpl implements WebSocket, TransportLayer {
                             underlyingOutput.pop(bytes);
                         }
                         break;
+                    case PN_PROXY_CONNECTED:
                     case PN_WS_CONNECTED_FLOW:
                     case PN_WS_CONNECTED_PONG:
                     case PN_WS_CONNECTED_CLOSING:
