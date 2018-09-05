@@ -23,6 +23,14 @@ public class ProxyHandlerImpl implements ProxyHandler {
 
     @Override
     public Boolean validateProxyReply(ByteBuffer buffer) {
+        int size = buffer.remaining();
+
+        if (size > 0) {
+            byte[] data = new byte[buffer.remaining()];
+            buffer.get(data);
+        }
+
+        // TODO: validate the actual call
         return true;
     }
 }
